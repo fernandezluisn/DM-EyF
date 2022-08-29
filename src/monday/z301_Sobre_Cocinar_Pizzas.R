@@ -9,6 +9,8 @@
 ## lose.
 ## --- Bill Gates
 
+# cp tiene que ser -1
+
 # Limpiamos el entorno
 rm(list = ls())
 gc(verbose = FALSE)
@@ -24,7 +26,7 @@ require("DiceKriging")
 require("mlrMBO")
 
 # Poner la carpeta de la materia de SU computadora local
-setwd("/home/aleb/dmeyf2022")
+setwd("C:/Users/lnfernandez/Desktop/posgrado/DM EyN/DM-EyF")
 # Poner sus semillas
 semillas <- c(17, 19, 23, 29, 31)
 
@@ -51,6 +53,10 @@ in_training <- caret::createDataPartition(dataset$clase_binaria,
 dtrain  <-  dataset[in_training, ]
 dtest   <-  dataset[-in_training, ]
 
+# �c�mo hacer la mejor pizza?
+# generar variables cantidad y calidad ingredientes, tiempo de leudado, tiempo de cocci�n, temperatura del horno, temperatura ambiente
+# gusto, salada, cruda, crocante, si leud�, espesor, altura, que no tenga burbujas grandes, acidez
+
 ## ---------------------------
 ## Step 2: Nuestra pizza: Un modelo
 ## ---------------------------
@@ -61,9 +67,9 @@ modelo <- rpart(clase_binaria ~ .,
                 data = dtrain,
                 xval = 0,
                 cp = 0,
-                minsplit = 20,
+                minsplit = 20, # minimo de elementos de 2 al maximo de datos
                 minbucket = 10,
-                maxdepth = 10)
+                maxdepth = 10) # profunddad hasta 30
 pred_testing <- predict(modelo, dtest, type = "prob")
 end_time <- Sys.time()
 model_time <- end_time - start_time
@@ -109,6 +115,7 @@ n_mb <- 100 - 2
 # Estimación de cuanto tardaría en buscar el mejor modelo con 3 parámetros.
 print(seconds_to_period(n_md * n_ms * n_seeds * model_time * n_mb))
 
+# LHS
 ## Preguntas
 ## - ¿Dispone del tiempo para realizar esta búsqueda?
 ## - ¿Qué hacemos cuándo un parámetro tiene valores continuos?
@@ -168,11 +175,11 @@ ds_sample <- tomar_muestra(dataset)
 table(dataset[ds_sample]$clase_binaria)
 
 ## Preguntas
-## - ¿Qué tipo de muestre se tomó?
-## - ¿Hay mejores formas de muestrear?
-## - ¿Es bueno muestrear?
+## - ¿Qué tipo de muestre se tomó? Oversamplig o undersampling
+## - ¿Hay mejores formas de muestrear? hay otras smooting
+## - ¿Es bueno muestrear? para optimizar o validar, s�
 ## - ¿Qué efectos en las métricas va a producir el muestreo?
-## - ¿Por qué se eligió usar el AUC?
+## - ¿Por qué se eligió usar el AUC? mira principalmente el ordenamiento por lo que no se ve afectada por desbalanceo
 ## - ¿Qué hay que cambiar en la función de ganancia para poder utilizarla?
 
 ## ---------------------------
@@ -352,7 +359,9 @@ set.seed(semillas[1])
 obj_fun_md_ms <- function(x) {
   experimento_rpart(dataset, semillas
             , md = x$maxdepth
-            , ms = x$minsplit)
+            , ms = x$minsplit
+            , cp = x$cp
+            , mb = floor(x$minbucket*x$minsplit))
 }
 
 obj_fun <- makeSingleObjectiveFunction(
@@ -360,15 +369,16 @@ obj_fun <- makeSingleObjectiveFunction(
   fn = obj_fun_md_ms,
   par.set = makeParamSet(
     makeIntegerParam("maxdepth",  lower = 4L, upper = 20L),
-    makeIntegerParam("minsplit",  lower = 1L, upper = 200L)
-    # makeNumericParam <- para parámetros continuos
+    makeIntegerParam("minsplit",  lower = 1L, upper = 500L),
+    makeNumericParam("cp",lower = -1, upper = 1),
+    makeNumericParam("minbucket",lower = 0L, upper = 1)
   ),
   # noisy = TRUE,
   has.simple.signature = FALSE
 )
 
 ctrl <- makeMBOControl()
-ctrl <- setMBOControlTermination(ctrl, iters = 16L)
+ctrl <- setMBOControlTermination(ctrl, iters = 50L)# m�s parametros, m�s estimaciones
 ctrl <- setMBOControlInfill(
   ctrl,
   crit = makeMBOInfillCritEI(),
@@ -388,3 +398,5 @@ print(run_md_ms)
 ## Agregue todos los parámetros que considere. Una vez que tenga sus mejores
 ## parámetros, haga una copia del script rpart/z101_PrimerModelo.R, cambie los
 ## parámetros dentro del script, ejecutelo y suba a Kaggle su modelo.
+
+### hacer ejercicio sin training con el entrenamiento y con ganancia, no auc

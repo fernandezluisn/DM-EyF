@@ -2,6 +2,9 @@ require("data.table")
 require("rpart")
 require("ggplot2")
 
+# modelos ordenan datos
+# azar: ditintas semillas, distintos resultados. Evaluar modelos
+
 
 # Poner la carpeta de la materia de SU computadora local
 setwd("C:/Users/lnfernandez/Desktop/posgrado/DM EyN/DM-EyF")  #Establezco el Working Directory
