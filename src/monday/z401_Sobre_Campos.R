@@ -10,7 +10,17 @@
 
 # Limpiamos el entorno
 rm(list = ls())
+
+#fuerza al garbage collector
 gc(verbose = FALSE)
+
+#arboles cortan con fronteras ortogonales
+# logistica, perceptr�n y svm corta con una recta
+# knn no tiene forma extricta
+# redes neuronales se adaptan a un mont�n de formas. Suman dimensiones, alteran el espacio
+#rpart usa vaiables subrogadas, datos faltantes usan variable subrogada
+# dos variables correlacionadas en �rboles no hacen da�o
+
 
 # Librerías necesarias
 require("data.table")
@@ -19,9 +29,13 @@ require("ggplot2")
 require("dplyr")
 
 # Poner la carpeta de la materia de SU computadora local
-setwd("/home/aleb/dmeyf2022")
+setwd("C:/Users/lnfernandez/Desktop/posgrado/DM EyN/DM-EyF")
 # Poner sus semillas
-semillas <- c(17, 19, 23, 29, 31)
+semillas <- c(100621,
+              102149,
+              202061,
+              257093,
+              584723)
 
 # Cargamos el dataset
 dataset <- fread("./datasets/competencia1_2022.csv")
@@ -73,7 +87,7 @@ print(modelo$variable.importance)
 
 
 ## Preguntas
-## - ¿Cuáles son las variables más importantes para el modelo?
+## - ¿Cu�les son las variables más importantes para el modelo?
 ## - ¿Cómo calcula RPART la importancia de una variable?
 ## - ¿Es la única forma de calcular la importancia de una variable?
 
@@ -99,7 +113,7 @@ print(sum(is.na(dtrain$Visa_fechaalta)))
 
 # Imputamos los nulos de nuestra variable con ceros
 dtrain[, Visa_fechaalta_2 := ifelse(is.na(Visa_fechaalta), 
-            0,
+            -1,
             Visa_fechaalta)] 
 
 # Chequeamos el número de nulos de la nueva variable
@@ -178,6 +192,16 @@ experimento <- function() {
             list = FALSE)
         train  <-  dataset[in_training, ]
         test   <-  dataset[-in_training, ]
+        
+        mean_Visa_fechaalta <- mean(dtrain$Visa_fechaalta, na.rm = T)
+        # Imputamos los nulos de nuestra variable con la media
+        train[, Visa_fechaalta_3 := ifelse(is.na(Visa_fechaalta), 
+                                            mean_Visa_fechaalta,
+                                            Visa_fechaalta)] 
+        
+        test[, Visa_fechaalta_3 := ifelse(is.na(Visa_fechaalta), 
+                                           mean_Visa_fechaalta,
+                                           Visa_fechaalta)] 
 
         r <- rpart(clase_binaria ~ .,
                     data = train,
@@ -191,7 +215,7 @@ experimento <- function() {
     }
     mean(gan)
 }
-
+experimento()
 # Veamos la 
 ## Preguntas
 ## - ¿Qué sucede si una transformación que depende del dataset no se aplica de
